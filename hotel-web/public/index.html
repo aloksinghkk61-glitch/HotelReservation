@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Larkspur Hotel: book a room</title>
+<style>
+  :root {
+    --ink: #14302f;
+    --ink-soft: #24504d;
+    --linen: #f5f7f6;
+    --paper: #ffffff;
+    --mist: #dce6e3;
+    --brass: #a5742a;
+    --brass-wash: #f3e8d0;
+    --text: #1b2625;
+    --muted: #55645f;
+    --ok: #1d6847;
+    --ok-wash: #dff0e7;
+    --bad: #a32a22;
+    --bad-wash: #f8e3e0;
+    --display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--linen); color: var(--text); font: 1rem/1.5 var(--body); }
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; line-height: 1.15; }
+  button, input, select { font: inherit; }
+  :focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
+
+  /* ---------- masthead ---------- */
+  .masthead { background: var(--ink); color: #f2f6f5; padding: 2.5rem 1.25rem 5.5rem; }
+  .wrap { max-width: 62rem; margin: 0 auto; }
+  .masthead h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); letter-spacing: 0.01em; }
+  .masthead p { margin: 0.75rem 0 0; max-width: 34rem; color: #c3d4d1; font-size: 1.05rem; }
+
+  main { max-width: 62rem; margin: -3.25rem auto 4rem; padding: 0 1.25rem; }
+
+  /* ---------- tabs ---------- */
+  .tabs { display: flex; gap: 0.25rem; margin-bottom: -1px; position: relative; z-index: 1; }
+  .tab {
+    border: 1px solid transparent; border-bottom: 0; background: transparent; color: #c3d4d1;
+    padding: 0.7rem 1.1rem; min-height: 44px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600;
+  }
+  .tab[aria-selected="true"] { background: var(--paper); color: var(--ink); border-color: var(--mist); }
+  .tab:not([aria-selected="true"]):hover { color: #fff; }
+
+  .panel { background: var(--paper); border: 1px solid var(--mist); border-radius: 0 10px 10px 10px; padding: 1.5rem; }
+  .panel[hidden] { display: none; }
+
+  /* ---------- forms ---------- */
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr) auto; align-items: end; }
+  .grid.two { grid-template-columns: 1fr 1fr auto; }
+  label { display: block; font-size: 0.875rem; font-weight: 600; color: var(--ink); margin-bottom: 0.3rem; }
+  input, select {
+    width: 100%; min-height: 44px; padding: 0.5rem 0.7rem; border: 1px solid #aebdb9;
+    border-radius: 6px; background: #fff; color: var(--text);
+  }
+  .btn {
+    min-height: 44px; padding: 0.55rem 1.2rem; border-radius: 6px; border: 1px solid var(--ink);
+    background: var(--ink); color: #fff; font-weight: 600; cursor: pointer;
+  }
+  .btn:hover { background: var(--ink-soft); }
+  .btn.quiet { background: transparent; color: var(--ink); }
+  .btn.quiet:hover { background: var(--linen); }
+  .btn.danger { background: var(--bad); border-color: var(--bad); }
+  .btn.danger:hover { background: #8a221b; }
+  .btn:disabled { opacity: 0.6; cursor: progress; }
+  .msg { min-height: 1.4rem; margin: 0.9rem 0 0; font-size: 0.95rem; }
+  .msg.error { color: var(--bad); font-weight: 600; }
+  .hint { color: var(--muted); font-size: 0.875rem; margin: 0.4rem 0 0; }
+
+  /* ---------- results ---------- */
+  .results-head { margin: 1.5rem 0 0.75rem; font-size: 1.25rem; }
+  .room {
+    display: grid; grid-template-columns: auto 1fr auto auto; gap: 1rem 1.25rem; align-items: center;
+    padding: 1rem 0; border-top: 1px solid var(--mist);
+  }
+  .plaque {
+    width: 5.25rem; padding: 0.45rem 0 0.5rem; text-align: center; background: var(--brass-wash);
+    border: 2px solid var(--brass); border-radius: 6px; outline: 1px solid var(--brass); outline-offset: -6px;
+  }
+  .plaque small { display: block; font-size: 0.75rem; color: var(--brass); font-weight: 600; }
+  .plaque b { font: 600 1.85rem/1.1 var(--display); color: var(--ink); }
+  .room h3 { font-size: 1.3rem; }
+  .room p { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.95rem; }
+  .price { text-align: right; }
+  .price b { display: block; font: 600 1.4rem/1.2 var(--display); }
+  .price span { color: var(--muted); font-size: 0.875rem; }
+  .book-form { grid-column: 1 / -1; background: var(--linen); border: 1px solid var(--mist); border-radius: 8px; padding: 1.1rem; }
+  .book-form[hidden] { display: none; }
+  .fields { display: grid; gap: 0.9rem; grid-template-columns: 1fr 1fr; }
+  .fields .wide { grid-column: 1 / -1; }
+  .form-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 1rem; }
+
+  /* ---------- booking card ---------- */
+  .booking { border: 1px solid var(--mist); border-radius: 10px; overflow: hidden; margin-top: 1.25rem; }
+  .booking-head { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; background: var(--linen); border-bottom: 1px solid var(--mist); }
+  .booking-head h2 { font-size: 1.5rem; letter-spacing: 0.02em; }
+  .badge { padding: 0.2rem 0.65rem; border-radius: 99px; font-size: 0.85rem; font-weight: 700; }
+  .badge.confirmed { background: var(--ok-wash); color: var(--ok); }
+  .badge.cancelled { background: var(--bad-wash); color: var(--bad); }
+  .booking-body { padding: 1.25rem; }
+  .facts { display: grid; grid-template-columns: max-content 1fr; gap: 0.45rem 1.5rem; margin: 0; }
+  .facts dt { color: var(--muted); }
+  .facts dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+  .booking h3 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 0.45rem 0.75rem 0.45rem 0; border-bottom: 1px solid var(--mist); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; }
+  td.amt, th.amt { text-align: right; padding-right: 0; font-variant-numeric: tabular-nums; }
+  .notice { margin: 1.25rem 0 0; padding: 0.8rem 1rem; border-left: 4px solid var(--brass); background: var(--brass-wash); border-radius: 0 6px 6px 0; font-size: 0.95rem; }
+  .actions { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+  footer { max-width: 62rem; margin: 0 auto 2rem; padding: 0 1.25rem; color: var(--muted); font-size: 0.875rem; }
+
+  @media (max-width: 52rem) {
+    .grid, .grid.two { grid-template-columns: 1fr 1fr; }
+    .grid .btn { grid-column: 1 / -1; }
+    .room { grid-template-columns: auto 1fr; }
+    .price { text-align: left; grid-column: 1 / -1; display: flex; align-items: baseline; gap: 0.75rem; }
+    .room .btn { grid-column: 1 / -1; }
+  }
+  @media (max-width: 34rem) {
+    .grid, .grid.two, .fields { grid-template-columns: 1fr; }
+    .panel { padding: 1.1rem; }
+    .facts { grid-template-columns: 1fr; gap: 0 0; }
+    .facts dd { margin-bottom: 0.6rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <h1>The Larkspur Hotel</h1>
+    <p>Eleven rooms across three categories. Cancel up to two days before check-in for a full refund.</p>
+  </div>
+</header>
+
+<main>
+  <div class="tabs" role="tablist" aria-label="Hotel services">
+    <button class="tab" role="tab" id="tab-book" aria-controls="panel-book" aria-selected="true">Book a room</button>
+    <button class="tab" role="tab" id="tab-manage" aria-controls="panel-manage" aria-selected="false" tabindex="-1">Manage a booking</button>
+  </div>
+
+  <!-- ===== Book ===== -->
+  <section class="panel" id="panel-book" role="tabpanel" aria-labelledby="tab-book">
+    <form id="search-form" class="grid" novalidate>
+      <div><label for="checkIn">Check-in</label><input type="date" id="checkIn" name="checkIn" required></div>
+      <div><label for="checkOut">Check-out</label><input type="date" id="checkOut" name="checkOut" required></div>
+      <div><label for="guests">Guests</label><input type="number" id="guests" name="guests" min="1" max="5" value="2" required></div>
+      <div>
+        <label for="category">Room type</label>
+        <select id="category" name="category">
+          <option value="any">Any type</option>
+          <option value="standard">Standard</option>
+          <option value="deluxe">Deluxe</option>
+          <option value="suite">Suite</option>
+        </select>
+      </div>
+      <button class="btn" type="submit">Search rooms</button>
+    </form>
+    <p class="msg error" id="search-msg" role="alert"></p>
+    <div id="results" aria-live="polite"></div>
+  </section>
+
+  <!-- ===== Manage ===== -->
+  <section class="panel" id="panel-manage" role="tabpanel" aria-labelledby="tab-manage" hidden>
+    <form id="manage-form" class="grid two" novalidate>
+      <div><label for="m-id">Booking ID</label><input id="m-id" name="id" placeholder="RES-1A2B3C4D" autocomplete="off" required></div>
+      <div><label for="m-email">Email used for the booking</label><input type="email" id="m-email" name="email" autocomplete="email" required></div>
+      <button class="btn" type="submit">Find booking</button>
+    </form>
+    <p class="msg error" id="manage-msg" role="alert"></p>
+    <div id="manage-result" aria-live="polite"></div>
+  </section>
+</main>
+
+<footer>
+  Payments on this site are simulated. Do not enter a real card number. To test a successful payment use 4242 4242 4242 4242; a card ending in 0000 is declined.
+</footer>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const money = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+const isoDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const fmtDate = iso => { const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }); };
+
+/* Build DOM safely (text only, never innerHTML). */
+function h(tag, props = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const k of kids.flat()) { if (k == null || k === false) continue; e.append(k.nodeType ? k : document.createTextNode(k)); }
+  return e;
+}
+
+async function api(path, { method = 'GET', data = {} } = {}) {
+  let url = path; const opts = { method };
+  if (method === 'GET') url += '?' + new URLSearchParams(data);
+  else { opts.headers = { 'Content-Type': 'application/x-www-form-urlencoded' }; opts.body = new URLSearchParams(data); }
+  let res, json;
+  try { res = await fetch(url, opts); json = await res.json(); }
+  catch { throw new Error('Could not reach the server. Check your connection and try again.'); }
+  if (!res.ok) throw new Error(json.error || 'Something went wrong.');
+  return json;
+}
+
+/* ---------- tabs ---------- */
+const tabs = [...document.querySelectorAll('[role=tab]')];
+function selectTab(tab) {
+  tabs.forEach(t => {
+    const on = t === tab;
+    t.setAttribute('aria-selected', on);
+    t.tabIndex = on ? 0 : -1;
+    document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+  });
+}
+tabs.forEach((t, i) => {
+  t.addEventListener('click', () => selectTab(t));
+  t.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      selectTab(next); next.focus();
+    }
+  });
+});
+
+/* ---------- search ---------- */
+const today = new Date(), tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+$('#checkIn').min = isoDate(today); $('#checkIn').value = isoDate(today);
+$('#checkOut').min = isoDate(tomorrow); $('#checkOut').value = isoDate(tomorrow);
+$('#checkIn').addEventListener('change', e => {
+  const [y, m, d] = e.target.value.split('-').map(Number); if (!y) return;
+  const next = isoDate(new Date(y, m - 1, d + 1));
+  $('#checkOut').min = next;
+  if ($('#checkOut').value < next) $('#checkOut').value = next;
+});
+
+let lastQuery = null;
+
+$('#search-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = new FormData(e.target), btn = e.submitter, msg = $('#search-msg');
+  const q = { checkIn: f.get('checkIn'), checkOut: f.get('checkOut'), guests: f.get('guests'), category: f.get('category') };
+  msg.textContent = ''; btn.disabled = true;
+  try { const res = await api('/api/search', { data: q }); lastQuery = q; renderRooms(res); }
+  catch (err) { msg.textContent = err.message; $('#results').replaceChildren(); }
+  finally { btn.disabled = false; }
+});
+
+function renderRooms(res) {
+  const box = $('#results'); box.replaceChildren();
+  if (!res.rooms.length) {
+    box.append(h('p', { class: 'results-head' }, 'No rooms match those dates. Try different dates, fewer guests, or another room type.'));
+    return;
+  }
+  const n = res.rooms.length;
+  box.append(h('h2', { class: 'results-head' },
+    `${n} ${n === 1 ? 'room is' : 'rooms are'} available for ${res.nights} ${res.nights === 1 ? 'night' : 'nights'}`));
+  res.rooms.forEach(room => box.append(roomRow(room, res.nights)));
+}
+
+function roomRow(room, nights) {
+  const form = bookForm(room);
+  const btn = h('button', { class: 'btn', type: 'button', 'aria-expanded': 'false', onclick: () => {
+    document.querySelectorAll('.book-form').forEach(f => { if (f !== form) { f.hidden = true; } });
+    document.querySelectorAll('.room > .btn').forEach(b => { if (b !== btn) b.setAttribute('aria-expanded', 'false'); });
+    form.hidden = !form.hidden; btn.setAttribute('aria-expanded', String(!form.hidden));
+    if (!form.hidden) $('input', form).focus();
+  } }, 'Book this room');
+  return h('article', { class: 'room' },
+    h('div', { class: 'plaque' }, h('small', {}, 'Room'), h('b', {}, room.roomNo)),
+    h('div', {}, h('h3', {}, room.category), h('p', {}, `Sleeps up to ${room.capacity}`)),
+    h('div', { class: 'price' }, h('b', {}, money(room.total)), h('span', {}, `${money(room.rate)} per night`)),
+    btn, form);
+}
+
+function bookForm(room) {
+  const msg = h('p', { class: 'msg error', role: 'alert' });
+  const submit = h('button', { class: 'btn', type: 'submit' }, `Pay ${money(room.total)} and confirm`);
+  const id = k => `${k}-${room.roomNo}`;
+  const field = (k, label, props = {}, wide = false) =>
+    h('div', { class: wide ? 'wide' : '' }, h('label', { for: id(k) }, label), h('input', { id: id(k), name: k, ...props }));
+  const form = h('form', { class: 'book-form', hidden: true, novalidate: true,
+    onsubmit: async e => {
+      e.preventDefault(); msg.textContent = ''; submit.disabled = true;
+      const f = new FormData(form);
+      try {
+        const b = await api('/api/book', { method: 'POST', data: {
+          roomNo: room.roomNo, checkIn: lastQuery.checkIn, checkOut: lastQuery.checkOut, guests: lastQuery.guests,
+          name: f.get('name'), email: f.get('email'), phone: f.get('phone'), card: f.get('card') } });
+        showConfirmation(b);
+      } catch (err) { msg.textContent = err.message; }
+      finally { submit.disabled = false; }
+    } },
+    h('div', { class: 'fields' },
+      field('name', 'Full name', { autocomplete: 'name', required: true }),
+      field('email', 'Email', { type: 'email', autocomplete: 'email', required: true }),
+      field('phone', 'Phone (optional)', { type: 'tel', autocomplete: 'tel' }),
+      field('card', 'Card number', { inputmode: 'numeric', autocomplete: 'off', placeholder: '4242 4242 4242 4242', required: true })),
+    h('p', { class: 'hint' }, 'Simulated payment. Do not enter a real card.'),
+    h('div', { class: 'form-actions' }, submit), msg);
+  return form;
+}
+
+function showConfirmation(b) {
+  const box = $('#results'); box.replaceChildren(
+    h('h2', { class: 'results-head' }, 'Your room is booked'),
+    bookingCard(b),
+    h('p', { class: 'notice' }, `Keep your booking ID (${b.id}). You need it with your email to view or cancel this booking.`),
+    h('div', { class: 'actions' }, h('button', { class: 'btn quiet', type: 'button', onclick: () => box.replaceChildren() }, 'Book another room')));
+  box.scrollIntoView({ block: 'start' });
+}
+
+/* ---------- booking card (shared) ---------- */
+function bookingCard(b, onCancel) {
+  const row = (k, v) => [h('dt', {}, k), h('dd', {}, v)];
+  const pays = h('div', { class: 'table-wrap' }, h('table', {},
+    h('thead', {}, h('tr', {}, ['Date', 'Reference', 'Method', 'Status'].map(t => h('th', {}, t)), h('th', { class: 'amt' }, 'Amount'))),
+    h('tbody', {}, b.payments.map(p => h('tr', {},
+      h('td', {}, p.at.replace('T', ' ')), h('td', {}, p.ref), h('td', {}, p.method), h('td', {}, p.status),
+      h('td', { class: 'amt' }, money(p.amount)))))));
+  const cancelled = b.status === 'CANCELLED';
+  return h('div', { class: 'booking' },
+    h('div', { class: 'booking-head' }, h('h2', {}, b.id),
+      h('span', { class: 'badge ' + (cancelled ? 'cancelled' : 'confirmed') }, cancelled ? 'Cancelled' : 'Confirmed')),
+    h('div', { class: 'booking-body' },
+      h('dl', { class: 'facts' },
+        row('Guest', `${b.guest.name} (${b.guest.email})`),
+        row('Room', `${b.room.no}, ${b.room.category}`),
+        row('Check-in', fmtDate(b.checkIn)),
+        row('Check-out', fmtDate(b.checkOut)),
+        row('Length of stay', `${b.nights} ${b.nights === 1 ? 'night' : 'nights'}`),
+        row('Guests', String(b.guests)),
+        row('Rate', `${money(b.room.rate)} per night`),
+        row('Total', money(b.total)),
+        cancelled && row('Refunded', money(b.refund))),
+      h('h3', {}, 'Payments'), pays,
+      onCancel && b.canCancel && h('div', { class: 'actions' },
+        h('button', { class: 'btn danger', type: 'button', onclick: onCancel },
+          b.refundIfCancelled > 0 ? `Cancel booking and refund ${money(b.refundIfCancelled)}` : 'Cancel booking (no refund due)'))));
+}
+
+/* ---------- manage ---------- */
+$('#manage-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = new FormData(e.target), btn = e.submitter, msg = $('#manage-msg');
+  const data = { id: f.get('id').trim().toUpperCase(), email: f.get('email').trim() };
+  msg.textContent = ''; btn.disabled = true;
+  try { renderManaged(await api('/api/booking', { method: 'POST', data }), data); }
+  catch (err) { msg.textContent = err.message; $('#manage-result').replaceChildren(); }
+  finally { btn.disabled = false; }
+});
+
+function renderManaged(b, creds) {
+  const msg = $('#manage-msg');
+  $('#manage-result').replaceChildren(bookingCard(b, async () => {
+    const refundText = b.refundIfCancelled > 0 ? ` You will be refunded ${money(b.refundIfCancelled)}.` : ' No refund is due.';
+    if (!confirm(`Cancel booking ${b.id}?${refundText}`)) return;
+    try { renderManaged(await api('/api/cancel', { method: 'POST', data: creds }), creds); msg.textContent = ''; }
+    catch (err) { msg.textContent = err.message; }
+  }));
+}
+</script>
+</body>
+</html>
